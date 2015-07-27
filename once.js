@@ -9,3 +9,16 @@ function once(func) {
 		}
 	}
 }
+
+//test
+var times = 0;
+
+function calledOnce() {
+	times++;
+}
+
+var onceCalled = once(calledOnce);
+onceCalled();
+onceCalled();
+onceCalled();
+console.log(times);
