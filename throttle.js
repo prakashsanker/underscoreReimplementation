@@ -1,38 +1,54 @@
-/*
-Implementing throttle function -
-
-Creates and returns a new, throttled version of the passed function, that, when invoked repeatedly, 
-will only actually call the original function at most once per every wait milliseconds. 
-Useful for rate-limiting events that occur faster than you can keep up with.
-
-So returning a function that calls func
-So I call the function over and over again, but it will only call it once per every wait period.
-
-setInterval will call the function once every wait period 
-
-but that's not we want -- we want to decrement a counter 
-
-call the throttled function
-check if we are within the wait period
-if we are within the wait period - do not execute the function
-if we are not within the wait period - execute the function
-
-
-*/
-
+// throttle_.throttle(function, wait, [options]) 
+// Creates and returns a new, throttled version of the passed function, that, 
+//when invoked repeatedly, will only actually call the original function at most
+// once per every wait milliseconds. If called during wait, function will be called again after wait period is over. 
 
 function throttle(func, wait) {
-	 function () {
-		var maxWait = wait;
-		var wait = wait;
-		setInterval(function(){
-			wait = wait - 1;
-		}, 1);
-
-		return function () {
-			if (wait === 0 || wait === maxWait) {
-				return func.apply(this , Array.prototype.slice.call(func.arguments));
-			} 
+	var context = this;
+	var intervalId;
+	var time = wait;
+	var calledMultiple = false;
+	return function() {
+		var args = Array.prototype.slice.call(arguments);
+		var timeoutId;
+		function countdown() {
+			time = time - 1;
+			if (time === 0) {
+				intervalId = clearInterval(intervalId);
+			}
 		}
-	}();
+		if(typeof intervalId === "undefined") {
+			time = wait;
+			intervalId = setInterval(countdown, 1);
+			return func.call(context, this);
+		} else {
+			//still in wait period, function is being called. 
+			//do nothing, but after wait is done call again
+			if (typeof timeoutId === "undefined") {
+				setTimeout(function() {
+					timeoutId = clearTimeout(timeoutId);
+					//need to restart timer
+					time = wait;
+					intervalId = setInterval(countdown, 1);
+					return func.call(context, this);
+				}, time);
+			}
+
+		}
+	}
 }
+
+//cases
+//call multiple times in wait period - should only be called once
+//call once, wait for wait to finish, call again
+//call once, call again, should only be called twice. 
+
+
+function timesCalled() {
+	var nTimes = 0;
+	return function() {
+		nTimes++;
+		return nTimes;
+	}
+}
+
